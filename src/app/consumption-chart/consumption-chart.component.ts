@@ -1,6 +1,8 @@
 
 import { Component, Inject, NgZone, PLATFORM_ID,OnInit,SimpleChanges } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { of } from 'rxjs';
+import { mergeMap } from 'rxjs/operators';
 
 import {ConsumptionDataService} from '../consumption-data.service'
 
@@ -19,7 +21,11 @@ export class ConsumptionChartComponent implements OnInit {
 	private chart: am4charts.XYChart
 	private fdata: any = []
 
-  constructor(@Inject(PLATFORM_ID) private platformId, private zone: NgZone, private consumptionDataService: ConsumptionDataService) {}
+	constructor(
+				@Inject(PLATFORM_ID) private platformId,
+				private zone: NgZone,
+				private consumptionDataService: ConsumptionDataService
+			) {}
 
 	// Run the function only in the browser
 	browserOnly(f: () => void) {
@@ -53,153 +59,141 @@ export class ConsumptionChartComponent implements OnInit {
 		
 		chartData.unshift(chartData.pop())
 		console.log('fetched Data',chartData)
-		return chartData
+		// using 'of' to observe data
+		return of(chartData)
 	}
 
-	fetchData(): void{
+
+	// is this necessary?
+	// ngAfterViewInit() {
+		
+		
+	// Chart code goes in here
+	drowChart(data){ 
+			this.browserOnly(() => {
+
+			am4core.useTheme(am4themes_animated);
+
+			let chart = am4core.create("chartdiv", am4charts.XYChart);
+			let title = chart.titles.create();
+			title.text = "Energy Consumption";
+			title.tooltipText = "Energy Consumption in an average day for each season";
+			chart.tooltip.label.maxWidth = 150;
+			chart.tooltip.label.wrap = true;
+
+			let interfaceColors = new am4core.InterfaceColorSet();
+
+			chart.paddingRight = 20;
+			chart.colors.step = 2;
+
+			chart.data = data
+
+			console.log('chart.data',chart.data)
+
+			let dateAxis = chart.xAxes.push(new am4charts.ValueAxis());
+			dateAxis.max = 24;
+			dateAxis.strictMinMax = true;
+			dateAxis.renderer.minGridDistance = 50;
+			dateAxis.renderer.grid.template.location = 0;
+
+			let valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+			// valueAxis.tooltip.disabled = true;
+			valueAxis.showTooltipOn = "always"
+			valueAxis.renderer.minWidth = 60;
+
+			let valueAxis2 = chart.yAxes.push(new am4charts.ValueAxis());
+			valueAxis2.tooltip.disabled = true;
+			valueAxis2.renderer.grid.template.strokeDasharray = "2,3";
+			valueAxis2.renderer.minWidth = 60;
+
+			let valueAxis3 = chart.yAxes.push(new am4charts.ValueAxis());
+			valueAxis3.tooltip.disabled = true;
+			// valueAxis.tooltip.disabled = true;
+			valueAxis.renderer.minWidth = 60;
+
+
+			let series = chart.series.push(new am4charts.LineSeries());
+			series.name = "winter";
+			series.dataFields.valueX = "date";
+			series.dataFields.valueY = "winter";
+			series.tooltip = new am4core.Tooltip();
+
+			series.tooltipText = "winter:{valueY}";
+
+			series.tooltip.background.cornerRadius = 20;
+			series.tooltip.background.strokeOpacity = 0;
+			series.tooltip.pointerOrientation = "vertical";
+			series.tooltip.label.minWidth = 40;
+			series.tooltip.label.minHeight = 40;
+			series.tooltip.label.textAlign = "middle";
+			series.tooltip.label.textValign = "middle";
+			series.legendSettings.itemValueText = "{valueY}";
+			let bullet = series.bullets.push(new am4charts.CircleBullet());
+			bullet.circle.stroke = interfaceColors.getFor("background");
+			bullet.circle.strokeWidth = 1;
+			let bullet1hover = bullet.states.create("hover");
+			bullet1hover.properties.scale = 1.3;
+
+			let series2 = chart.series.push(new am4charts.LineSeries());
+			series2.name = "summer";
+			series2.dataFields.valueX = "date";
+			series2.dataFields.valueY = "summer";
+			series2.strokeWidth = 3;
+			series2.tooltipText = "summer: {valueY }";
+			let bullet2 = series2.bullets.push(new am4charts.CircleBullet());
+			bullet2.circle.stroke = interfaceColors.getFor("background");
+			bullet2.circle.strokeWidth = 1;
+
+
+			let series3 = chart.series.push(new am4charts.LineSeries());
+			series3.name = "rest";
+			series3.dataFields.valueX = "date";
+			series3.dataFields.valueY = "rest";
+			series3.tooltipText = "rest:{ valueY }";
+			let bullet3 = series3.bullets.push(new am4charts.CircleBullet());
+			bullet3.circle.stroke = interfaceColors.getFor("background");
+			bullet3.circle.strokeWidth = 1;
+
+
+			chart.cursor = new am4charts.XYCursor();
+			chart.cursor.maxTooltipDistance = 50;
+
+			let scrollbarX = new am4charts.XYChartScrollbar();
+			scrollbarX.series.push(series);
+			chart.scrollbarX = scrollbarX;
+			chart.legend = new am4charts.Legend();
+
+
+			this.chart = chart;
+		}
+
+	)}
+	
+	fetchDatatoDrowChart(): void{
 		this.consumptionDataService.sendGetRequest()
+		.pipe(
+			mergeMap((data) => {
+				return this.serializeData(data)
+			})
+		)
 		.subscribe(data=> {
-			this.fdata = this.serializeData(data)})
+			this.drowChart(data)
+		})
 	
 	}
 
-	ngAfterViewInit() {
-		
-		setTimeout(
-		
-		// Chart code goes in here
-			() => this.browserOnly(() => {
-
-				am4core.useTheme(am4themes_animated);
-				// am4core.options.onlyShowOnViewport = true;
-			
-
-				let chart = am4core.create("chartdiv", am4charts.XYChart);
-				let title = chart.titles.create();
-				title.text = "Energy Consumption";
-				title.tooltipText = "Energy Consumption in an average day for each season";
-				chart.tooltip.label.maxWidth = 150;
-				chart.tooltip.label.wrap = true;
-				
-				let interfaceColors = new am4core.InterfaceColorSet();
-
-
-				// (async ()=> {
-				// 	let data = await this.fetchData(this.fdata)
-				// 	if(data.length){
-				// 		console.log("data")
-				// 	}
-				// 		// chart.dataSource.load();
-				// 		// am4charts.updateData()
-
-				// })()
-
-
-				// if(this.fdata.length){
-				// 	chart.dataSource.load();
-				// }
-
-				chart.paddingRight = 20;
-				chart.colors.step = 2;
-				
-
-				
-				
-				chart.data = this.fdata
-
-				console.log('chart.data',chart.data)
-
-				let dateAxis = chart.xAxes.push(new am4charts.ValueAxis());
-				dateAxis.max = 24;
-				dateAxis.strictMinMax = true;
-				dateAxis.renderer.minGridDistance = 50;
-				dateAxis.renderer.grid.template.location = 0;
-
-				let valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
-				// valueAxis.tooltip.disabled = true;
-				valueAxis.showTooltipOn = "always"
-				valueAxis.renderer.minWidth = 60;
-
-				let valueAxis2 = chart.yAxes.push(new am4charts.ValueAxis());
-				valueAxis2.tooltip.disabled = true;
-				valueAxis2.renderer.grid.template.strokeDasharray = "2,3";
-				valueAxis2.renderer.minWidth = 60;
-				
-				let valueAxis3 = chart.yAxes.push(new am4charts.ValueAxis());
-				valueAxis3.tooltip.disabled = true;
-				// valueAxis.tooltip.disabled = true;
-				valueAxis.renderer.minWidth = 60;
-				
-
-				let series = chart.series.push(new am4charts.LineSeries());
-				series.name = "winter";
-				series.dataFields.valueX = "date";
-				series.dataFields.valueY = "winter";
-				series.tooltip = new am4core.Tooltip();
-
-				series.tooltipText = "winter:{valueY}";
-
-				series.tooltip.background.cornerRadius = 20;
-				series.tooltip.background.strokeOpacity = 0;
-				series.tooltip.pointerOrientation = "vertical";
-				series.tooltip.label.minWidth = 40;
-				series.tooltip.label.minHeight = 40;
-				series.tooltip.label.textAlign = "middle";
-				series.tooltip.label.textValign = "middle";
-				series.legendSettings.itemValueText = "{valueY}";
-				let bullet = series.bullets.push(new am4charts.CircleBullet());
-				bullet.circle.stroke = interfaceColors.getFor("background");
-				bullet.circle.strokeWidth = 1;
-				let bullet1hover = bullet.states.create("hover");
-				bullet1hover.properties.scale = 1.3;
-				
-				let series2 = chart.series.push(new am4charts.LineSeries());
-				series2.name = "summer";
-				series2.dataFields.valueX = "date";
-				series2.dataFields.valueY = "summer";
-				series2.strokeWidth = 3;
-				series2.tooltipText = "summer: {valueY }";
-				let bullet2 = series2.bullets.push(new am4charts.CircleBullet());
-				bullet2.circle.stroke = interfaceColors.getFor("background");
-				bullet2.circle.strokeWidth = 1;
-				
-
-				let series3 = chart.series.push(new am4charts.LineSeries());
-				series3.name = "rest";
-				series3.dataFields.valueX = "date";
-				series3.dataFields.valueY = "rest";
-				series3.tooltipText = "rest:{ valueY }";
-				let bullet3 = series3.bullets.push(new am4charts.CircleBullet());
-				bullet3.circle.stroke = interfaceColors.getFor("background");
-				bullet3.circle.strokeWidth = 1;
-
-
-				chart.cursor = new am4charts.XYCursor();
-				chart.cursor.maxTooltipDistance = 50;
-
-				let scrollbarX = new am4charts.XYChartScrollbar();
-				scrollbarX.series.push(series);
-				chart.scrollbarX = scrollbarX;
-				chart.legend = new am4charts.Legend();
-
-
-				this.chart = chart;
-
-		}), 350)
-	}
-
 	ngOnDestroy() {
-	// Clean up chart when the component is removed
-	this.browserOnly(() => {
-	  if (this.chart) {
-		this.chart.dispose();
-	  }
-	});
+		// Clean up chart when the component is removed
+		this.browserOnly(() => {
+		  if (this.chart) {
+			this.chart.dispose();
+		  }
+		});
 	}
 
 
 	ngOnInit(): void {
-		this.fetchData()
+		this.fetchDatatoDrowChart()
 	}
 
 
