@@ -24,7 +24,6 @@ import am4themes_animated from '@amcharts/amcharts4/themes/animated';
 })
 export class ConsumptionChartComponent implements OnInit {
   private chart: am4charts.XYChart;
-  private fdata: any = [];
 
   constructor(
     @Inject(PLATFORM_ID) private platformId,
@@ -41,6 +40,7 @@ export class ConsumptionChartComponent implements OnInit {
     }
   }
 
+	// serialize the fetched data for the chart
   serializeData(response) {
     let dates = [];
     let summerWerktag = [];
@@ -166,6 +166,7 @@ export class ConsumptionChartComponent implements OnInit {
     });
   }
 
+// drow the chart only after getting the data
   fetchDatatoDrowChart(): void {
     this.consumptionDataService
       .sendGetRequest()
@@ -188,6 +189,7 @@ export class ConsumptionChartComponent implements OnInit {
     });
   }
 
+// componenet initialization
   ngOnInit(): void {
     this.fetchDatatoDrowChart();
   }
