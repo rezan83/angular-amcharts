@@ -90,6 +90,8 @@ export class ConsumptionChartComponent implements OnInit {
       chart.colors.step = 4;
 
       let timeAxis = chart.xAxes.push(new am4charts.DateAxis());
+	  timeAxis.dateFormats.setKey('hour', 'HH:mm');
+	  timeAxis.periodChangeDateFormats.setKey('hour', 'HH:mm')
       timeAxis.baseInterval = {
         timeUnit: 'minute',
         count: 15,
