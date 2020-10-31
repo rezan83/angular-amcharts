@@ -40,7 +40,7 @@ export class ConsumptionChartComponent implements OnInit {
     }
   }
 
-	// serialize the fetched data for the chart
+  // serialize the fetched data for the chart
   serializeData(response) {
     let dates = [];
     let summerWerktag = [];
@@ -76,51 +76,43 @@ export class ConsumptionChartComponent implements OnInit {
       am4core.useTheme(am4themes_animated);
 
       let chart = am4core.create('chartdiv', am4charts.XYChart);
+      chart.data = data;
+
       let title = chart.titles.create();
-      title.text = 'Energy Consumption';
+      title.text = 'Energieverbrauch';
       title.tooltipText =
         'Energieverbrauch an einem durchschnittlichen Tag für jede Jahreszeit';
       chart.tooltip.label.maxWidth = 250;
       chart.tooltip.label.wrap = true;
 
       let interfaceColors = new am4core.InterfaceColorSet();
-
       chart.paddingRight = 20;
-      chart.colors.step = 2;
+      chart.colors.step = 4;
 
-      chart.data = data;
-
-      console.log('chart.data', chart.data);
-
-      let dateAxis = chart.xAxes.push(new am4charts.ValueAxis());
-      dateAxis.max = 24;
-      dateAxis.strictMinMax = true;
-      dateAxis.renderer.minGridDistance = 50;
-      dateAxis.renderer.grid.template.location = 0;
+      let timeAxis = chart.xAxes.push(new am4charts.ValueAxis());
+      timeAxis.max = 24;
+      timeAxis.title.text = 'Std';
+      timeAxis.strictMinMax = true;
+      timeAxis.renderer.minGridDistance = 50;
+      timeAxis.renderer.grid.template.location = 0;
 
       let valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
-      // valueAxis.tooltip.disabled = true;
-      valueAxis.showTooltipOn = 'always';
+      valueAxis.tooltip.disabled = true;
       valueAxis.renderer.minWidth = 60;
 
       let valueAxis2 = chart.yAxes.push(new am4charts.ValueAxis());
       valueAxis2.tooltip.disabled = true;
-      valueAxis2.renderer.grid.template.strokeDasharray = '2,3';
       valueAxis2.renderer.minWidth = 60;
 
       let valueAxis3 = chart.yAxes.push(new am4charts.ValueAxis());
       valueAxis3.tooltip.disabled = true;
-      // valueAxis.tooltip.disabled = true;
-      valueAxis.renderer.minWidth = 60;
+      valueAxis3.renderer.minWidth = 60;
 
       let series = chart.series.push(new am4charts.LineSeries());
       series.name = 'winter';
       series.dataFields.valueX = 'date';
       series.dataFields.valueY = 'winter';
-      series.tooltip = new am4core.Tooltip();
-
-      series.tooltipText = 'winter:{valueY}';
-
+      series.tooltip.tooltipText = 'winter:{valueY}';
       series.tooltip.background.cornerRadius = 20;
       series.tooltip.background.strokeOpacity = 0;
       series.tooltip.pointerOrientation = 'vertical';
@@ -133,40 +125,64 @@ export class ConsumptionChartComponent implements OnInit {
       bullet.circle.stroke = interfaceColors.getFor('background');
       bullet.circle.strokeWidth = 1;
       let bullet1hover = bullet.states.create('hover');
-      bullet1hover.properties.scale = 1.3;
+      bullet1hover.properties.scale = 1.5;
+      bullet.tooltipText = 'Winter: [bold]{valueY}[/]';
 
       let series2 = chart.series.push(new am4charts.LineSeries());
-      series2.name = 'summer';
+      series2.name = 'rest';
       series2.dataFields.valueX = 'date';
-      series2.dataFields.valueY = 'summer';
-      series2.strokeWidth = 3;
-      series2.tooltipText = 'summer: {valueY }';
+      series2.dataFields.valueY = 'rest';
+      series2.tooltip.tooltipText = 'rest: {valueY }';
+      series2.tooltip.background.cornerRadius = 20;
+      series2.tooltip.background.strokeOpacity = 0;
+      series2.tooltip.pointerOrientation = 'vertical';
+      series2.tooltip.label.minWidth = 40;
+      series2.tooltip.label.minHeight = 40;
+      series2.tooltip.label.textAlign = 'middle';
+      series2.tooltip.label.textValign = 'middle';
       let bullet2 = series2.bullets.push(new am4charts.CircleBullet());
       bullet2.circle.stroke = interfaceColors.getFor('background');
       bullet2.circle.strokeWidth = 1;
+      let bullet2hover = bullet2.states.create('hover');
+      bullet2hover.properties.scale = 1.5;
+      bullet2.tooltipText = 'Rest: [bold]{valueY}[/]';
 
       let series3 = chart.series.push(new am4charts.LineSeries());
-      series3.name = 'rest';
+      series3.name = 'summer';
+      //   series3.stroke = am4core.color('#ff0000'); // red
       series3.dataFields.valueX = 'date';
-      series3.dataFields.valueY = 'rest';
-      series3.tooltipText = 'rest:{ valueY }';
+      series3.dataFields.valueY = 'summer';
+      series3.strokeWidth = 3;
+      series3.tooltip.tooltipText = 'summer: {valueY }';
+      series3.tooltip.background.cornerRadius = 20;
+      series3.tooltip.background.strokeOpacity = 0;
+      series3.tooltip.pointerOrientation = 'vertical';
+      series3.tooltip.label.minWidth = 40;
+      series3.tooltip.label.minHeight = 40;
+      series3.tooltip.label.textAlign = 'middle';
+      series3.tooltip.label.textValign = 'middle';
       let bullet3 = series3.bullets.push(new am4charts.CircleBullet());
       bullet3.circle.stroke = interfaceColors.getFor('background');
       bullet3.circle.strokeWidth = 1;
+      let bullet3hover = bullet3.states.create('hover');
+      bullet3hover.properties.scale = 1.5;
+      bullet3.tooltipText = 'Summer: [bold]{valueY}[/]';
 
       chart.cursor = new am4charts.XYCursor();
       chart.cursor.maxTooltipDistance = 50;
 
+      // zooming scrollbar
       let scrollbarX = new am4charts.XYChartScrollbar();
       scrollbarX.series.push(series);
       chart.scrollbarX = scrollbarX;
+      //   chart legends
       chart.legend = new am4charts.Legend();
 
       this.chart = chart;
     });
   }
 
-// drow the chart only after getting the data
+  // drow the chart only after getting the data
   fetchDatatoDrowChart(): void {
     this.consumptionDataService
       .sendGetRequest()
@@ -189,7 +205,7 @@ export class ConsumptionChartComponent implements OnInit {
     });
   }
 
-// componenet initialization
+  // componenet initialization
   ngOnInit(): void {
     this.fetchDatatoDrowChart();
   }
