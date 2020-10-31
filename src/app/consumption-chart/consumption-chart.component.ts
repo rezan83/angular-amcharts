@@ -43,6 +43,7 @@ export class ConsumptionChartComponent implements OnInit {
   // serialize the fetched data for the chart
   serializeData(response) {
     let dates = [];
+    let dateBase = '10/19/2020 ';
     let summerWerktag = [];
     let winterWerktag = [];
     let restWerktag = [];
@@ -54,7 +55,7 @@ export class ConsumptionChartComponent implements OnInit {
 
     for (let i in dates) {
       chartData.push({
-        date: parseFloat(dates[i].slice(0, 5).replace(':', '.')),
+        date: new Date(dateBase + dates[i]),
         winter: winterWerktag[i],
         summer: summerWerktag[i],
         rest: restWerktag[i],
@@ -88,10 +89,12 @@ export class ConsumptionChartComponent implements OnInit {
       chart.paddingRight = 20;
       chart.colors.step = 4;
 
-      let timeAxis = chart.xAxes.push(new am4charts.ValueAxis());
-      timeAxis.max = 24;
+      let timeAxis = chart.xAxes.push(new am4charts.DateAxis());
+      timeAxis.baseInterval = {
+        timeUnit: 'minute',
+        count: 15,
+      };
       timeAxis.title.text = 'Std';
-      timeAxis.strictMinMax = true;
       timeAxis.renderer.minGridDistance = 50;
       timeAxis.renderer.grid.template.location = 0;
 
@@ -109,12 +112,12 @@ export class ConsumptionChartComponent implements OnInit {
 
       let series = chart.series.push(new am4charts.LineSeries());
       series.name = 'winter';
-      series.dataFields.valueX = 'date';
+      series.dataFields.dateX = 'date';
       series.dataFields.valueY = 'winter';
       series.tooltip.tooltipText = 'winter:{valueY}';
+      series.tooltip.pointerOrientation = 'left';
       series.tooltip.background.cornerRadius = 20;
       series.tooltip.background.strokeOpacity = 0;
-      series.tooltip.pointerOrientation = 'vertical';
       series.tooltip.label.minWidth = 40;
       series.tooltip.label.minHeight = 40;
       series.tooltip.label.textAlign = 'middle';
@@ -129,7 +132,7 @@ export class ConsumptionChartComponent implements OnInit {
 
       let series2 = chart.series.push(new am4charts.LineSeries());
       series2.name = 'rest';
-      series2.dataFields.valueX = 'date';
+      series2.dataFields.dateX = 'date';
       series2.dataFields.valueY = 'rest';
       series2.tooltip.tooltipText = 'rest: {valueY }';
       series2.tooltip.background.cornerRadius = 20;
@@ -149,13 +152,13 @@ export class ConsumptionChartComponent implements OnInit {
       let series3 = chart.series.push(new am4charts.LineSeries());
       series3.name = 'summer';
       //   series3.stroke = am4core.color('#ff0000'); // red
-      series3.dataFields.valueX = 'date';
+      series3.dataFields.dateX = 'date';
       series3.dataFields.valueY = 'summer';
       series3.strokeWidth = 3;
       series3.tooltip.tooltipText = 'summer: {valueY }';
       series3.tooltip.background.cornerRadius = 20;
       series3.tooltip.background.strokeOpacity = 0;
-      series3.tooltip.pointerOrientation = 'vertical';
+      series3.tooltip.pointerOrientation = 'right';
       series3.tooltip.label.minWidth = 40;
       series3.tooltip.label.minHeight = 40;
       series3.tooltip.label.textAlign = 'middle';
