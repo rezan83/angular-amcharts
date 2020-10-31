@@ -7,8 +7,8 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { of } from 'rxjs';
-import { mergeMap } from 'rxjs/operators';
+import { of ,forkJoin } from 'rxjs';
+import { mergeMap} from 'rxjs/operators';
 
 import { ConsumptionDataService } from '../consumption-data.service';
 
@@ -40,33 +40,6 @@ export class ConsumptionChartComponent implements OnInit {
     }
   }
 
-  // serialize the fetched data for the chart
-  serializeData(response) {
-    let dates = [];
-    let dateBase = '10/19/2020 ';
-    let summerWerktag = [];
-    let winterWerktag = [];
-    let restWerktag = [];
-    let chartData = [];
-    dates = Object.values(response.Winter[0].Time);
-    summerWerktag = Object.values(response.Summer[0].Werktag);
-    winterWerktag = Object.values(response.Winter[0].Werktag);
-    restWerktag = Object.values(response.Rest[0].Werktag);
-
-    for (let i in dates) {
-      chartData.push({
-        date: new Date(dateBase + dates[i]),
-        winter: winterWerktag[i],
-        summer: summerWerktag[i],
-        rest: restWerktag[i],
-      });
-    }
-
-    chartData.unshift(chartData.pop());
-    // using 'of' to observe data
-    return of(chartData);
-  }
-
   // is this necessary?
   // ngAfterViewInit() {
 
@@ -76,6 +49,7 @@ export class ConsumptionChartComponent implements OnInit {
       am4core.useTheme(am4themes_animated);
 
       let chart = am4core.create('chartdiv', am4charts.XYChart);
+      chart.fontSize = 15;
       chart.data = data;
 
       let title = chart.titles.create();
@@ -90,8 +64,8 @@ export class ConsumptionChartComponent implements OnInit {
       chart.colors.step = 4;
 
       let timeAxis = chart.xAxes.push(new am4charts.DateAxis());
-	  timeAxis.dateFormats.setKey('hour', 'HH:mm');
-	  timeAxis.periodChangeDateFormats.setKey('hour', 'HH:mm')
+      timeAxis.dateFormats.setKey('hour', 'HH:mm');
+      timeAxis.periodChangeDateFormats.setKey('hour', 'HH:mm');
       timeAxis.baseInterval = {
         timeUnit: 'minute',
         count: 15,
@@ -104,16 +78,8 @@ export class ConsumptionChartComponent implements OnInit {
       valueAxis.tooltip.disabled = true;
       valueAxis.renderer.minWidth = 60;
 
-      let valueAxis2 = chart.yAxes.push(new am4charts.ValueAxis());
-      valueAxis2.tooltip.disabled = true;
-      valueAxis2.renderer.minWidth = 60;
-
-      let valueAxis3 = chart.yAxes.push(new am4charts.ValueAxis());
-      valueAxis3.tooltip.disabled = true;
-      valueAxis3.renderer.minWidth = 60;
-
       let series = chart.series.push(new am4charts.LineSeries());
-      series.name = 'winter';
+      series.name = 'Winter';
       series.dataFields.dateX = 'date';
       series.dataFields.valueY = 'winter';
       series.tooltip.tooltipText = 'winter:{valueY}';
@@ -130,10 +96,10 @@ export class ConsumptionChartComponent implements OnInit {
       bullet.circle.strokeWidth = 1;
       let bullet1hover = bullet.states.create('hover');
       bullet1hover.properties.scale = 1.5;
-      bullet.tooltipText = 'Winter: [bold]{valueY}[/]';
+      bullet.tooltipText = 'Winter: {valueY}[/]';
 
       let series2 = chart.series.push(new am4charts.LineSeries());
-      series2.name = 'rest';
+      series2.name = 'Rest';
       series2.dataFields.dateX = 'date';
       series2.dataFields.valueY = 'rest';
       series2.tooltip.tooltipText = 'rest: {valueY }';
@@ -144,15 +110,16 @@ export class ConsumptionChartComponent implements OnInit {
       series2.tooltip.label.minHeight = 40;
       series2.tooltip.label.textAlign = 'middle';
       series2.tooltip.label.textValign = 'middle';
+      series2.legendSettings.itemValueText = '{valueY}';
       let bullet2 = series2.bullets.push(new am4charts.CircleBullet());
       bullet2.circle.stroke = interfaceColors.getFor('background');
       bullet2.circle.strokeWidth = 1;
       let bullet2hover = bullet2.states.create('hover');
       bullet2hover.properties.scale = 1.5;
-      bullet2.tooltipText = 'Rest: [bold]{valueY}[/]';
+      bullet2.tooltipText = 'Rest: {valueY}[/]';
 
       let series3 = chart.series.push(new am4charts.LineSeries());
-      series3.name = 'summer';
+      series3.name = 'Summer';
       //   series3.stroke = am4core.color('#ff0000'); // red
       series3.dataFields.dateX = 'date';
       series3.dataFields.valueY = 'summer';
@@ -165,12 +132,77 @@ export class ConsumptionChartComponent implements OnInit {
       series3.tooltip.label.minHeight = 40;
       series3.tooltip.label.textAlign = 'middle';
       series3.tooltip.label.textValign = 'middle';
+      series3.legendSettings.itemValueText = '{valueY}';
       let bullet3 = series3.bullets.push(new am4charts.CircleBullet());
       bullet3.circle.stroke = interfaceColors.getFor('background');
       bullet3.circle.strokeWidth = 1;
       let bullet3hover = bullet3.states.create('hover');
       bullet3hover.properties.scale = 1.5;
-      bullet3.tooltipText = 'Summer: [bold]{valueY}[/]';
+      bullet3.tooltipText = 'Summer: {valueY}[/]';
+
+      // Wochenende ###################################
+      let series4 = chart.series.push(new am4charts.LineSeries());
+      series4.name = 'Winter Wochenende';
+      series4.dataFields.dateX = 'date';
+      series4.dataFields.valueY = 'winterW';
+      series4.tooltip.tooltipText = 'winterW:{valueY}';
+      series4.tooltip.pointerOrientation = 'left';
+      series4.tooltip.background.cornerRadius = 20;
+      series4.tooltip.background.strokeOpacity = 0;
+      series4.tooltip.label.minWidth = 40;
+      series4.tooltip.label.minHeight = 40;
+      series4.tooltip.label.textAlign = 'middle';
+      series4.tooltip.label.textValign = 'middle';
+      series4.legendSettings.itemValueText = '{valueY}';
+      let bullet4 = series4.bullets.push(new am4charts.CircleBullet());
+      bullet4.circle.stroke = interfaceColors.getFor('background');
+      bullet4.circle.strokeWidth = 1;
+      let bullet4hover = bullet4.states.create('hover');
+      bullet4hover.properties.scale = 1.5;
+      bullet4.tooltipText = 'Winter W: {valueY}[/]';
+
+      let series5 = chart.series.push(new am4charts.LineSeries());
+      series5.name = 'Rest Wochenende';
+      series5.dataFields.dateX = 'date';
+      series5.dataFields.valueY = 'restW';
+      series5.tooltip.tooltipText = 'restW: {valueY }';
+      series5.tooltip.background.cornerRadius = 20;
+      series5.tooltip.background.strokeOpacity = 0;
+      series5.tooltip.pointerOrientation = 'down';
+      series5.tooltip.label.minWidth = 40;
+      series5.tooltip.label.minHeight = 40;
+      series5.tooltip.label.textAlign = 'middle';
+      series5.tooltip.label.textValign = 'middle';
+      series5.legendSettings.itemValueText = '{valueY}';
+      let bullet5 = series5.bullets.push(new am4charts.CircleBullet());
+      bullet5.circle.stroke = interfaceColors.getFor('background');
+      bullet5.circle.strokeWidth = 1;
+      let bullet5hover = bullet5.states.create('hover');
+      bullet5hover.properties.scale = 1.5;
+      bullet5.tooltipText = 'Rest W: {valueY}[/]';
+
+      let series6 = chart.series.push(new am4charts.LineSeries());
+      series6.name = 'Summer Wochenende';
+      //   series6.stroke = am4core.color('#ff0000'); // red
+      series6.dataFields.dateX = 'date';
+      series6.dataFields.valueY = 'summerW';
+      series6.strokeWidth = 3;
+      series6.tooltip.tooltipText = 'summer Wochenende: {valueY }';
+      series6.tooltip.background.cornerRadius = 20;
+      series6.tooltip.background.strokeOpacity = 0;
+      series6.tooltip.pointerOrientation = 'right';
+      series6.tooltip.label.minWidth = 40;
+      series6.tooltip.label.minHeight = 40;
+      series6.tooltip.label.textAlign = 'middle';
+      series6.tooltip.label.textValign = 'middle';
+      series6.legendSettings.itemValueText = '{valueY}';
+      let bullet6 = series6.bullets.push(new am4charts.CircleBullet());
+      bullet6.circle.stroke = interfaceColors.getFor('background');
+      bullet6.circle.strokeWidth = 1;
+      let bullet6hover = bullet6.states.create('hover');
+      bullet6hover.properties.scale = 1.5;
+      bullet6.tooltipText = 'Summer W: {valueY}[/]';
+      // ###################################
 
       chart.cursor = new am4charts.XYCursor();
       chart.cursor.maxTooltipDistance = 50;
@@ -186,13 +218,69 @@ export class ConsumptionChartComponent implements OnInit {
     });
   }
 
-  // drow the chart only after getting the data
+  // average weekend = sunday+saterday/2
+  averageWochenende(arr1, arr2) {
+    return arr1.map((item, i) => {
+      return item + arr2[i] / 2;
+    });
+  }
+  // serialize the fetched data for the chart
+  serializeData(response1, response2) {
+    let dates = [];
+    let dateBase = '10/19/2020 ';
+    let summerWerktag = [];
+    let winterWerktag = [];
+    let restWerktag = [];
+    let summerWochenende = [];
+    let winterWochenende = [];
+    let restWochenende = [];
+    let chartData = [];
+    dates = Object.values(response1.Winter[0].Time);
+    summerWerktag = Object.values(response1.Summer[0].Werktag);
+    winterWerktag = Object.values(response1.Winter[0].Werktag);
+    restWerktag = Object.values(response1.Rest[0].Werktag);
+
+    summerWochenende = this.averageWochenende(
+      Object.values(response2.Summer[0].Samstag),
+      Object.values(response2.Summer[0].Sonntag)
+    );
+    winterWochenende = this.averageWochenende(
+      Object.values(response2.Winter[0].Samstag),
+      Object.values(response2.Winter[0].Sonntag)
+    );
+    restWochenende = this.averageWochenende(
+      Object.values(response2.Rest[0].Samstag),
+      Object.values(response2.Rest[0].Sonntag)
+    );
+
+    for (let i in dates) {
+      chartData.push({
+        date: new Date(dateBase + dates[i]),
+        winter: winterWerktag[i],
+        summer: summerWerktag[i],
+        rest: restWerktag[i],
+        winterW: winterWochenende[i],
+        summerW: summerWochenende[i],
+        restW: restWochenende[i],
+      });
+    }
+
+    chartData.unshift(chartData.pop());
+    // using 'of' to observe data
+    return of(chartData);
+  }
+
+  // feeding chart with data 
   fetchDatatoDrowChart(): void {
-    this.consumptionDataService
-      .sendGetRequest()
+    // join both services
+    forkJoin(
+      this.consumptionDataService.GetWerktag(),
+      this.consumptionDataService.GetWochenende()
+    )
       .pipe(
-        mergeMap((data) => {
-          return this.serializeData(data);
+        // drow the chart only after getting the data
+        mergeMap(([data1, data2]) => {
+          return this.serializeData(data1, data2);
         })
       )
       .subscribe((data) => {
