@@ -62,7 +62,6 @@ export class ConsumptionChartComponent implements OnInit {
     }
 
     chartData.unshift(chartData.pop());
-    console.log('fetched Data', chartData);
     // using 'of' to observe data
     return of(chartData);
   }
