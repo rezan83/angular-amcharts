@@ -1,7 +1,8 @@
+$purple: rgb(238, 0, 238);
 #chart-container {
   display: flex;
-  *{
-      margin: 5px 0px;
+  * {
+    margin: 5px 0px;
   }
   #chartForm {
     margin: 20px 10px;
@@ -9,6 +10,36 @@
       display: flex;
       flex-direction: column;
       margin: 20px 10px;
+      .radio-label {
+        cursor: pointer;
+        padding: 5px 10px;
+        border-radius: 6px;
+      }
+      input[type="radio"] {
+        margin: 0px 10px;
+        &:checked + label {
+          background-color: $purple;
+          color: white;
+        }
+      }
+    }
+    #sector {
+      width: 100%;
+      height: 60px;
+
+      select {
+        color: white;
+        border-radius: 6px;
+        width: 100%;
+        height: 100%;
+        border: none;
+        background: url(http://cdn1.iconfinder.com/data/icons/cc_mono_icon_set/blacks/16x16/br_down.png)
+          no-repeat right $purple;
+
+        padding: 0 10px;
+        z-index: 2;
+        cursor: pointer;
+      }
     }
   }
 }

@@ -4,21 +4,26 @@
   <div id="chartForm">
     <form [formGroup]="chartForm">
       <div class="input-section" id="weekend_prod">
-        <label for="weekend_prod">Produktion am Wochenende?</label>
-        <div>Nein<input
+        <p id="weekend_prod">Produktion am Wochenende?</p>
+        <div>
+        <input
           type="radio"
           name="weekend_prod"
           formControlName="weekend_prod"
           value="No"
-          id=""
+          id="nein"
         />
-        Ja<input
+        <label class="radio-label" for="nein">Nein</label>
+        <input
           type="radio"
           name="weekend_prod"
           formControlName="weekend_prod"
           value="Yes"
-          id=""
-        /></div>
+          id="ja"
+        />
+        <label class="radio-label" for="ja">Ja</label>
+
+        </div>
         
       </div>
       <div class="input-section"  id="sector">
