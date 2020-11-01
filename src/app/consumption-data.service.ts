@@ -8,14 +8,13 @@ import { Observable } from 'rxjs';
 export class ConsumptionDataService {
   constructor(private httpClient: HttpClient) {}
 
-  // sector=Haushalt, weekend_prod=No
-  private baseUrl: String =
-    'https://n21p4p5y4j.execute-api.eu-central-1.amazonaws.com/dev/load_profiles/?sector=Haushalt&weekend_prod=No&day=';
+  private baseUrl = ({ weekend_prod, sector }): String =>
+    `https://n21p4p5y4j.execute-api.eu-central-1.amazonaws.com/dev/load_profiles/?sector=${sector}&weekend_prod=${weekend_prod}&day=`;
 
-  public GetWerktag(): Observable<any> {
-    return this.httpClient.get(this.baseUrl + 'Werktag');
+  public GetWerktag(chartInputs): Observable<any> {
+    return this.httpClient.get(this.baseUrl(chartInputs) + 'Werktag');
   }
-  public GetWochenende(): Observable<any> {
-    return this.httpClient.get(this.baseUrl + 'Wochenende');
+  public GetWochenende(chartInputs): Observable<any> {
+    return this.httpClient.get(this.baseUrl(chartInputs) + 'Wochenende');
   }
 }

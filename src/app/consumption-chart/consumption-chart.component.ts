@@ -6,9 +6,10 @@ import {
   OnInit,
   SimpleChanges,
 } from '@angular/core';
+import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { isPlatformBrowser } from '@angular/common';
-import { of ,forkJoin } from 'rxjs';
-import { mergeMap} from 'rxjs/operators';
+import { of, forkJoin } from 'rxjs';
+import { mergeMap } from 'rxjs/operators';
 
 import { ConsumptionDataService } from '../consumption-data.service';
 
@@ -24,12 +25,23 @@ import am4themes_animated from '@amcharts/amcharts4/themes/animated';
 })
 export class ConsumptionChartComponent implements OnInit {
   private chart: am4charts.XYChart;
+  chartForm: FormGroup;
+  private chartInputs = {
+    weekend_prod: 'No',
+    sector: 'Haushalt',
+  };
 
   constructor(
     @Inject(PLATFORM_ID) private platformId,
     private zone: NgZone,
-    private consumptionDataService: ConsumptionDataService
-  ) {}
+    private consumptionDataService: ConsumptionDataService,
+    private formBuilder: FormBuilder
+  ) {
+    this.chartForm = this.formBuilder.group({
+      weekend_prod: new FormControl('No'),
+      sector: new FormControl('Haushalt'),
+    });
+  }
 
   // Run the function only in the browser
   browserOnly(f: () => void) {
@@ -78,6 +90,7 @@ export class ConsumptionChartComponent implements OnInit {
       valueAxis.tooltip.disabled = true;
       valueAxis.renderer.minWidth = 60;
 
+      // werktag series ##################################
       let series = chart.series.push(new am4charts.LineSeries());
       series.name = 'Winter';
       series.dataFields.dateX = 'date';
@@ -226,36 +239,32 @@ export class ConsumptionChartComponent implements OnInit {
   }
   // serialize the fetched data for the chart
   serializeData(response1, response2) {
-    let dates = [];
-    let dateBase = '10/19/2020 ';
-    let summerWerktag = [];
-    let winterWerktag = [];
-    let restWerktag = [];
-    let summerWochenende = [];
-    let winterWochenende = [];
-    let restWochenende = [];
+    let baseDate = '10/19/2020 ';
+    let nextDate = '10/20/2020 ';
     let chartData = [];
-    dates = Object.values(response1.Winter[0].Time);
-    summerWerktag = Object.values(response1.Summer[0].Werktag);
-    winterWerktag = Object.values(response1.Winter[0].Werktag);
-    restWerktag = Object.values(response1.Rest[0].Werktag);
+    let dates = Object.values(response1.Winter[0].Time);
+    let summerWerktag = Object.values(response1.Summer[0].Werktag);
+    let winterWerktag = Object.values(response1.Winter[0].Werktag);
+    let restWerktag = Object.values(response1.Rest[0].Werktag);
 
-    summerWochenende = this.averageWochenende(
+    let summerWochenende = this.averageWochenende(
       Object.values(response2.Summer[0].Samstag),
       Object.values(response2.Summer[0].Sonntag)
     );
-    winterWochenende = this.averageWochenende(
+    let winterWochenende = this.averageWochenende(
       Object.values(response2.Winter[0].Samstag),
       Object.values(response2.Winter[0].Sonntag)
     );
-    restWochenende = this.averageWochenende(
+    let restWochenende = this.averageWochenende(
       Object.values(response2.Rest[0].Samstag),
       Object.values(response2.Rest[0].Sonntag)
     );
 
     for (let i in dates) {
       chartData.push({
-        date: new Date(dateBase + dates[i]),
+        date: new Date(
+          (dates[i] === '00:00:00' ? nextDate : baseDate) + dates[i]
+        ),
         winter: winterWerktag[i],
         summer: summerWerktag[i],
         rest: restWerktag[i],
@@ -265,17 +274,19 @@ export class ConsumptionChartComponent implements OnInit {
       });
     }
 
-    chartData.unshift(chartData.pop());
+    // this could still work statistically but unfaithful to the data
+    // chartData.unshift(chartData.pop());
+
     // using 'of' to observe data
     return of(chartData);
   }
 
-  // feeding chart with data 
-  fetchDatatoDrowChart(): void {
+  // feeding chart with data
+  fetchDatatoDrowChart(chartInputs = this.chartInputs): void {
     // join both services
     forkJoin(
-      this.consumptionDataService.GetWerktag(),
-      this.consumptionDataService.GetWochenende()
+      this.consumptionDataService.GetWerktag(chartInputs),
+      this.consumptionDataService.GetWochenende(chartInputs)
     )
       .pipe(
         // drow the chart only after getting the data
@@ -300,5 +311,15 @@ export class ConsumptionChartComponent implements OnInit {
   // componenet initialization
   ngOnInit(): void {
     this.fetchDatatoDrowChart();
+    this.onChanges();
+  }
+
+  // when form inputs change
+  onChanges(): void {
+    this.chartForm.valueChanges.subscribe((val) => {
+      this.chartInputs = val;
+      this.ngOnDestroy();
+      this.fetchDatatoDrowChart();
+    });
   }
 }
