@@ -1,0 +1,14 @@
+#chart-container {
+  display: flex;
+  *{
+      margin: 5px 0px;
+  }
+  #chartForm {
+    margin: 20px 10px;
+    form .input-section {
+      display: flex;
+      flex-direction: column;
+      margin: 20px 10px;
+    }
+  }
+}

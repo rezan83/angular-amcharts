@@ -61,11 +61,12 @@ export class ConsumptionChartComponent implements OnInit {
       am4core.useTheme(am4themes_animated);
 
       let chart = am4core.create('chartdiv', am4charts.XYChart);
-      chart.fontSize = 15;
+      chart.fontSize = 13;
       chart.data = data;
 
       let title = chart.titles.create();
       title.text = 'Energieverbrauch';
+      title.fontSize = 20;
       title.tooltipText =
         'Energieverbrauch an einem durchschnittlichen Tag für jede Jahreszeit';
       chart.tooltip.label.maxWidth = 250;
@@ -226,6 +227,11 @@ export class ConsumptionChartComponent implements OnInit {
       chart.scrollbarX = scrollbarX;
       //   chart legends
       chart.legend = new am4charts.Legend();
+      chart.legend.maxWidth = 10;
+      chart.legend.position = 'top';
+      chart.legend.useDefaultMarker = true;
+      let marker = chart.legend.markers.template.children.getIndex(0);
+      marker.cornerRadius(10, 10, 10, 10);
 
       this.chart = chart;
     });

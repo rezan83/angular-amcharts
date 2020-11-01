@@ -1,36 +1,38 @@
-<div id="chartdiv" style="width: 100%; height: 500px"></div>
+<div id="chart-container">
+  <div id="chartdiv" style="width: 100%; height: 500px"></div>
 
-<form [formGroup]="chartForm">
-
-  <div id="weekend_prod">
-    <label for="weekend_prod">Haben Sie am Wochenende Produktion?</label>
-    Nein<input
-      type="radio"
-      name="weekend_prod"
-      formControlName="weekend_prod"
-      value="No"
-      id=""
-    />
-    Ja<input
-      type="radio"
-      name="weekend_prod"
-      formControlName="weekend_prod"
-      value="Yes"
-      id=""
-    />
+  <div id="chartForm">
+    <form [formGroup]="chartForm">
+      <div class="input-section" id="weekend_prod">
+        <label for="weekend_prod">Produktion am Wochenende?</label>
+        <div>Nein<input
+          type="radio"
+          name="weekend_prod"
+          formControlName="weekend_prod"
+          value="No"
+          id=""
+        />
+        Ja<input
+          type="radio"
+          name="weekend_prod"
+          formControlName="weekend_prod"
+          value="Yes"
+          id=""
+        /></div>
+        
+      </div>
+      <div class="input-section"  id="sector">
+        <label for="sector">Sektor:</label>
+        <select name="sector" formControlName="sector" id="">
+          <option value="Haushalt">Haushalt</option>
+          <option value="Industry">Industry</option>
+          <option value="Gewerbe">Gewerbe</option>
+          <option value="Dienstleistungen%2FIT">Dienstleistungen/IT</option>
+          <option value="Verkehr%2FLandwirtschaft">
+            Verkehr/Landwirtschaft
+          </option>
+        </select>
+      </div>
+    </form>
   </div>
-  <div id="sector">
-    <label for="sector">Welcher Sektor?</label>
-    <select name="sector" 
-    formControlName="sector"
-    id="">
-      <option value="Haushalt">Haushalt</option>
-      <option value="Industry">Industry</option>
-      <option value="Gewerbe">Gewerbe</option>
-      <option value="Dienstleistungen%2FIT">Dienstleistungen/IT</option>
-      <option value="Verkehr%2FLandwirtschaft">Verkehr/Landwirtschaft</option>
-      
-    </select>
-  </div>
-</form>
-
+</div>
