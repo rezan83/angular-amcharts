@@ -230,7 +230,7 @@ export class ConsumptionChartComponent implements OnInit {
       chart.legend.maxWidth = 10;
       chart.legend.position = 'top';
       chart.legend.useDefaultMarker = true;
-      let marker = chart.legend.markers.template.children.getIndex(0);
+      let marker: any = chart.legend.markers.template.children.getIndex(0);
       marker.cornerRadius(10, 10, 10, 10);
 
       this.chart = chart;
